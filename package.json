@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "author": "badryoskar (https://www.creative-webdeveloper.com/)",
+  "homepage": "https://github.com/badryoskar/trendradar#readme",
   "description": "Local-first Chrome MV3 extension for news aggregation and transparent topic watch.",
   "type": "module",
   "engines": {

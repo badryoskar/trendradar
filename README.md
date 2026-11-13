@@ -84,6 +84,11 @@ Dernière exécution le 12 novembre 2026. Le détail figure dans [`TEST_REPORT.m
 TypeScript (strict), React 18, Vite 7, zod, idb (IndexedDB), Vitest, Testing Library, fake-indexeddb, Playwright,
 axe-core, ESLint et Prettier. Aucune dépendance d'exécution au-delà de React, zod et idb.
 
+## Auteur
+
+Conçu et développé par **badryoskar**, développeur web (WordPress/PHP, TypeScript, extensions Chrome).
+Portfolio et contact : **[creative-webdeveloper.com](https://www.creative-webdeveloper.com/)**.
+
 ## Licence
 
 [MIT](LICENSE) © 2026 badryoskar.
