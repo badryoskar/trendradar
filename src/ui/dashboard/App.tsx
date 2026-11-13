@@ -139,7 +139,7 @@ function Panels({
         'latest',
         <LatestPanel data={data} refresh={refresh} onOpenSources={() => onNavigate('sources')} {...actions} />,
       )}
-      {panel('topics', <TopicsPanel />)}
+      {panel('topics', <TopicsPanel data={data} />)}
       {panel(
         'saved',
         <>

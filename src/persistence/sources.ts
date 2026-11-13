@@ -7,6 +7,11 @@ export async function recordAttempt(db: DB, attempt: FetchAttempt): Promise<void
 }
 
 /** Most recent attempts for a source, newest first. */
+/** All attempts started at or after `sinceIso` (coverage computation). */
+export async function listAttemptsSince(db: DB, sinceIso: string): Promise<FetchAttempt[]> {
+  return db.getAllFromIndex('fetchAttempts', 'byStartedAt', IDBKeyRange.lowerBound(sinceIso));
+}
+
 export async function listAttempts(db: DB, sourceId: string, limit = 10): Promise<FetchAttempt[]> {
   const all = await db.getAllFromIndex('fetchAttempts', 'bySourceId', sourceId);
   return all.sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, limit);

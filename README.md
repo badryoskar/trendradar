@@ -2,7 +2,7 @@
 
 Extension Chrome (Manifest V3) de veille d'actualités **local-first** : agrégation de sources autorisées (RSS/Atom, Hacker News), provenance et dates traçables, signaux de tendance uniquement lorsque les données le justifient.
 
-> **État : phase 3 (expérience de veille).** Collecte manuelle depuis Hacker News (API officielle) et des flux RSS/Atom autorisés, déduplication avec provenance, classement par mots-clés explicable et corrigeable, catégories personnalisées, recherche, filtres de dates honnêtes, favoris et lu/non lu, testés aussi sur l'extension réellement installée. Sujets et tendances : phase 4. Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
+> **État : phase 4 (sujets et signaux).** Collecte manuelle depuis Hacker News (API officielle) et des flux RSS/Atom autorisés, déduplication avec provenance, classement par mots-clés explicable et corrigeable, catégories personnalisées, recherche, filtres de dates honnêtes, favoris et lu/non lu, testés aussi sur l'extension réellement installée. Sujets récurrents et émergents calculés par des règles déterministes et versionnées, uniquement lorsque la couverture des données le permet ([`TREND_METHOD.md`](TREND_METHOD.md)). Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
 
 ## Principes
 

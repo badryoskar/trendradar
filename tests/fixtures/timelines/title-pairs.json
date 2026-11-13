@@ -1,0 +1,25 @@
+{
+  "synthetic": true,
+  "description": "SYNTHETIC title pairs written for this project to calibrate clustering rule v1. Not real headlines.",
+  "shouldGroup": [
+    ["PHP 8.5 released with pipe operator", "PHP 8.5 released: pipe operator and new array functions"],
+    ["Critical OpenSSL vulnerability CVE-2026-1234 patched", "OpenSSL patches critical CVE-2026-1234 vulnerability"],
+    ["Firefox 150 ships CSS masonry layout", "Firefox 150 ships masonry layout in CSS"],
+    [
+      "Faille critique dans le plugin WooCommerce Payments",
+      "WooCommerce Payments : faille critique corrigée dans le plugin"
+    ],
+    ["Rust 1.95 stabilise les closures asynchrones", "Rust 1.95 : les closures asynchrones stabilisées"],
+    ["Kubernetes 1.36 deprecates legacy ingress controller", "Kubernetes 1.36 deprecates the legacy ingress controller"]
+  ],
+  "shouldNotGroup": [
+    ["Google releases new AI model", "Microsoft releases new AI model"],
+    ["WordPress 7.0 release date announced", "WordPress security plugin update released"],
+    ["PHP 8.5 released with pipe operator", "PHP 7.4 end of life reminder"],
+    ["Apple hiring engineers in Montreal", "Apple stock falls after earnings"],
+    ["AI startup raises seed round", "AI startup shuts down after failed round"],
+    ["Python 3.15 beta available", "Python packaging survey results"],
+    ["Ukraine news update", "Ukraine update news today"],
+    ["Mercury rover lands on Mars", "Mercury prices rise in industrial markets"]
+  ]
+}

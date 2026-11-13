@@ -1,5 +1,47 @@
 # Rapport de tests
 
+## Phase 4 — 12 novembre 2026
+
+### Commandes exécutées et résultats observés
+
+| Commande                            | Résultat                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------- |
+| `npm run check`                     | OK. **19 fichiers, 203 tests réussis.** Build de 322,6 Kio, `permissions=[]` |
+| `E2E_NETWORK=1 npx playwright test` | **3 tests sur 3 réussis** sur l'extension installée (aucune régression)      |
+
+### Nouveaux tests (données synthétiques signalées comme telles, horloge fixe)
+
+- **Tokenisation :** accents, mots vides FR/EN, numéros de version, pluriels simplifiés.
+- **Calibration** (`tests/fixtures/timelines/title-pairs.json`, `"synthetic": true`) : **6 paires sur 6** regroupées, dont des paires en français ; **8 paires sur 8** gardées séparées (termes génériques, homonymes « Mercury », versions différentes, même entreprise sur des sujets différents).
+- **Regroupement :**
+  - libellé = titre réel d'un article du sujet ;
+  - origines et sources distinctes ; termes communs ;
+  - **résultat indépendant de l'ordre** (3 permutations) ;
+  - **aucun sujet géant** formé à partir de termes génériques ;
+  - **ancrage sur la graine** (une chaîne A~B~C ne fusionne pas les trois) ;
+  - chaînage temporel : un sujet couvert tous les 2 jours reste un seul sujet, un écart de plus de 72 h le coupe en deux ;
+  - un agrégateur compte comme une seule origine.
+- **Couverture :**
+  - union d'intervalles ; 3 flux requis ; profondeur insuffisante détectée ;
+  - les collectes quotidiennes se cumulent, un trou de 2 jours casse la couverture ;
+  - collectes en échec, Hacker News et démo ignorés.
+- **Signaux :**
+  - aucun historique → données insuffisantes, même avec 4 articles ;
+  - référence vide, 3 articles et 3 origines → émergent, **ratio 18** ;
+  - une seule source qui se répète → jamais émergent ;
+  - 2 articles à quelques heures d'écart → pas une tendance ;
+  - seuil inclusif à 3, et 2,25 → refusé avec le code de raison ;
+  - articles sans date exclus et comptés à part ; date future ignorée ;
+  - récurrent : 3 jours et 2 origines, sans exigence de couverture.
+- **Interface :**
+  - sans couverture : sujet affiché comme « données insuffisantes », avec l'explication « 0/3 flux » ;
+  - avec couverture : « Émergent », avec le ratio, les origines et les 3 articles liés.
+
+### Contrôle avec données réelles
+
+- `dist/` servi en local (Chromium), Hacker News actualisé (30 articles), onglet Topics ouvert. Résultat : **1 sujet réel regroupé** (2 articles HN sur le même sujet), affiché « **Signal indisponible — données insuffisantes** », avec une couverture de 0 flux sur 3, puisque Hacker News ne compte pas. C'est le comportement attendu : aucun signal fabriqué.
+- **Non exécuté :** un statut « émergent » sur données réelles. Il faudrait au moins 3 flux RSS réels actualisés sur une semaine. Cette preuve reste à constituer à l'usage, et ne sera pas simulée.
+
 ## Phase 3 — 12 novembre 2026
 
 **Environnement :** identique aux phases précédentes, plus `@playwright/test` 1.64.1 avec son Chromium.

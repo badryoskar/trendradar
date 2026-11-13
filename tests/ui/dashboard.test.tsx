@@ -31,7 +31,8 @@ describe('dashboard', () => {
     const user = userEvent.setup();
     renderApp(await freshDb());
     await user.click(await screen.findByRole('tab', { name: 'Topics' }));
-    expect(screen.getByText('Signal indisponible — historique insuffisant')).toBeInTheDocument();
+    expect(screen.getByText('Aucun sujet regroupé')).toBeInTheDocument();
+    expect(screen.getByText(/Fenêtre récente \(24 h\)/)).toHaveTextContent('non couverte — 0 flux sur 3 requis');
   });
 
   it('renders provenance, distinct dates and the unknown-date label', async () => {
