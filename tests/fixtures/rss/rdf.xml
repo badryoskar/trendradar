@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- SYNTHETIC FIXTURE: RSS 1.0 (RDF), Latin-1 encoded -->
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://purl.org/rss/1.0/" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel rdf:about="https://rdf.example.org/">
+    <title>Exemple RDF</title>
+    <link>https://rdf.example.org/</link>
+  </channel>
+  <item rdf:about="https://rdf.example.org/a">
+    <title>Café crème</title>
+    <link>https://rdf.example.org/a</link>
+    <dc:date>2026-11-08T12:00:00Z</dc:date>
+  </item>
+</rdf:RDF>

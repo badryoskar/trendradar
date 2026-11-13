@@ -1,26 +1,9 @@
-import { render, screen, within } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { putArticle, putSource } from '../../src/persistence/repositories';
-import { fixedClock } from '../../src/shared/clock';
-import { App } from '../../src/ui/dashboard/App';
-import { ServicesProvider, type AppServices } from '../../src/ui/services';
 import { freshDb, makeArticle, makeSource } from '../helpers';
-import type { DB } from '../../src/persistence/db';
-
-function renderApp(db: DB) {
-  const services: AppServices = {
-    db,
-    clock: fixedClock('2026-11-12T12:00:00.000Z'),
-    timeZone: 'America/Toronto',
-    locale: 'fr-CA',
-  };
-  return render(
-    <ServicesProvider services={services}>
-      <App />
-    </ServicesProvider>,
-  );
-}
+import { renderApp } from './render';
 
 describe('dashboard', () => {
   it('shows "configuration requise" and no fake content when there is no source', async () => {

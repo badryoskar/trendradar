@@ -65,6 +65,18 @@ export function ArticleCard({ article, state, sourcesById, categoriesById, onTog
           <dt>Découvert :</dt>
           <dd>{formatDateTime(dates.discoveredAt, locale, timeZone)}</dd>
         </div>
+        {article.provenance.flatMap((p) =>
+          (p.metrics ?? [])
+            .filter((m) => m.metric === 'hn.score')
+            .map((m) => (
+              <div key={`${p.sourceId}-${m.metric}`}>
+                <dt>Signal HN :</dt>
+                <dd>
+                  {m.value} points sur Hacker News (relevé {formatDateTime(m.capturedAt, locale, timeZone)})
+                </dd>
+              </div>
+            )),
+        )}
         {isRead && (
           <div>
             <dt>État :</dt>

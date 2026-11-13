@@ -5,6 +5,7 @@ import { useServices } from '../services';
 import { useDashboardData, type DashboardData } from '../useDashboardData';
 import { ArticleList } from './ArticleList';
 import { SettingsPanel } from './SettingsPanel';
+import { RefreshBar, useRefresh } from './RefreshBar';
 import { SourcesPanel } from './SourcesPanel';
 import { Tabs, type TabDef } from './Tabs';
 import { TopicsPanel } from './TopicsPanel';
@@ -75,6 +76,7 @@ function Panels({
 }) {
   const { db, clock } = useServices();
   const [actionError, setActionError] = useState<string | null>(null);
+  const refresh = useRefresh(reload);
   const sourcesById = useMemo(() => new Map(data.sources.map((s) => [s.id, s])), [data.sources]);
   const categoriesById = useMemo(() => new Map(data.categories.map((c) => [c.id, c])), [data.categories]);
 
@@ -97,6 +99,7 @@ function Panels({
   };
 
   const saved = data.articles.filter((a) => data.userStates.get(a.id)?.isSaved);
+  const stale = data.sources.filter((s) => !s.isDemo && s.enabled && s.health !== 'ok' && s.health !== 'never-fetched');
   const panel = (id: TabId, children: ReactNode) => (
     <section role="tabpanel" id={`panel-${id}`} aria-labelledby={`tab-${id}`} tabIndex={0} hidden={tab !== id}>
       {tab === id && children}
@@ -133,6 +136,16 @@ function Panels({
         'latest',
         <>
           <h2>Derniers articles découverts</h2>
+          {data.sources.some((s) => !s.isDemo) && <RefreshBar sources={data.sources} controller={refresh} />}
+          {stale.length > 0 && (
+            <div className="notice warning" role="status">
+              Données potentiellement périmées pour : {stale.map((s) => s.name).join(', ')}. Les articles déjà collectés
+              restent affichés.{' '}
+              <button type="button" onClick={() => onNavigate('sources')}>
+                Voir les sources
+              </button>
+            </div>
+          )}
           <ArticleList
             articles={data.articles}
             {...listProps}
@@ -159,7 +172,7 @@ function Panels({
           />
         </>,
       )}
-      {panel('sources', <SourcesPanel sources={data.sources} />)}
+      {panel('sources', <SourcesPanel sources={data.sources} run={run} refresh={refresh} />)}
       {panel('settings', <SettingsPanel settings={data.settings} run={run} />)}
     </>
   );

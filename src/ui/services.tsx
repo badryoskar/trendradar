@@ -1,6 +1,8 @@
 import { createContext, useContext, type ReactNode } from 'react';
+import type { FetchLike } from '../connectors/network-client';
 import type { DB } from '../persistence/db';
 import type { Clock } from '../shared/clock';
+import type { HostPermissions } from '../shared/permissions';
 
 /** Everything the UI needs from the outside world, injectable for tests. */
 export interface AppServices {
@@ -9,6 +11,8 @@ export interface AppServices {
   /** IANA zone used for display and local-day windows. */
   timeZone: string;
   locale: string;
+  fetchImpl: FetchLike;
+  permissions: HostPermissions;
 }
 
 const ServicesContext = createContext<AppServices | null>(null);

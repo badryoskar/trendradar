@@ -17,7 +17,7 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["chrome", "vitest/globals", "@testing-library/jest-dom"]
+    "types": ["chrome", "node", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src", "tests"]
 }

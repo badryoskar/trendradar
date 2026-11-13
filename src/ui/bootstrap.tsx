@@ -2,6 +2,7 @@ import { StrictMode, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { openTrendRadarDb, requestPersistentStorage } from '../persistence/db';
 import { systemClock } from '../shared/clock';
+import { chromeHostPermissions, memoryHostPermissions } from '../shared/permissions';
 import { ServicesProvider, type AppServices } from './services';
 import './styles.css';
 
@@ -20,6 +21,9 @@ export async function mountPage(render: () => ReactNode): Promise<void> {
       clock: systemClock,
       timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       locale: 'fr-CA',
+      fetchImpl: (input, init) => fetch(input, init),
+      permissions:
+        typeof chrome !== 'undefined' && chrome.permissions ? chromeHostPermissions : memoryHostPermissions(),
     };
     root.render(
       <StrictMode>

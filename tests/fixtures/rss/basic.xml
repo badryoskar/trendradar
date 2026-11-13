@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SYNTHETIC FIXTURE -->
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Blog Exemple &amp; Co</title>
+    <link>https://blog.example.org/</link>
+    <language>fr-ca</language>
+    <item>
+      <title>Sortie de &lt;b&gt;PHP 8.5&lt;/b&gt; : les nouveautés</title>
+      <link>https://blog.example.org/php-85?utm_source=rss&amp;utm_medium=feed&amp;id=42#comments</link>
+      <guid isPermaLink="false">post-42</guid>
+      <pubDate>Tue, 10 Nov 2026 14:30:00 -0500</pubDate>
+      <dc:creator>Alice</dc:creator>
+      <description><![CDATA[<p>Résumé <strong>court</strong> <script>alert(1)</script>du billet.</p><img src="https://tracker.example/p.gif">]]></description>
+      <content:encoded><![CDATA[<p>FULL ARTICLE BODY THAT MUST NOT BE STORED</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Billet sans date</title>
+      <link>/relative/no-date</link>
+      <guid>https://blog.example.org/relative/no-date</guid>
+    </item>
+    <item>
+      <title>Date au format ISO dans dc:date</title>
+      <link>https://blog.example.org/iso</link>
+      <dc:date>2026-11-09T08:00:00+01:00</dc:date>
+    </item>
+    <item>
+      <title>Date illisible</title>
+      <link>https://blog.example.org/bad-date</link>
+      <pubDate>hier soir</pubDate>
+    </item>
+    <item>
+      <title></title>
+      <link>https://blog.example.org/no-title</link>
+    </item>
+    <item>
+      <title>Sans lien</title>
+    </item>
+    <item>
+      <title>Lien javascript</title>
+      <link>javascript:alert(1)</link>
+    </item>
+  </channel>
+</rss>

@@ -72,6 +72,7 @@ const ALLOWED_HOSTS = new Set([
   'json-schema.org',
   'example.com',
   'hacker-news.firebaseio.com',
+  'news.ycombinator.com', // attribution / discussion links, never fetched
   'purl.org',
 ]);
 let totalBytes = 0;

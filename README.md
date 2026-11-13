@@ -2,7 +2,7 @@
 
 Extension Chrome (Manifest V3) de veille d'actualités **local-first** : agrégation de sources autorisées (RSS/Atom, Hacker News), provenance et dates traçables, signaux de tendance uniquement lorsque les données le justifient.
 
-> **État : phase 1 (fondation).** Stockage local, modèle de données, interface de base et jeu de démonstration fictif. La collecte réelle (HN, RSS/Atom) arrive en phase 2. Voir [`TEST_REPORT.md`](TEST_REPORT.md).
+> **État : phase 2 (connecteurs).** Collecte manuelle depuis l'API officielle Hacker News et des flux RSS/Atom ajoutés par l'utilisateur, avec déduplication, provenance et santé des sources. Sujets et tendances : phase 4. Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
 
 ## Principes
 
@@ -38,7 +38,9 @@ Puis dans Chrome : `chrome://extensions` → activer le _mode développeur_ → 
 
 ```text
 public/manifest.json        manifeste MV3 (copié tel quel)
-src/domain/                 types + schémas zod, dates/fenêtres locales, catégories, démo
+src/connectors/             client réseau borné, parseur RSS/Atom (DOMParser), API Hacker News
+src/collection/             orchestration du rafraîchissement, ajout de source
+src/domain/                 types + schémas zod, dates, URL canoniques, texte inerte, catégories, démo
 src/persistence/            IndexedDB (migrations versionnées), repositories validés
 src/shared/                 horloge injectable, garde-fous d'URL
 src/ui/                     popup + tableau de bord React (Latest, Topics, Saved, Sources, Settings)
