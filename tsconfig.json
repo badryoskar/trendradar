@@ -19,5 +19,5 @@
     "noEmit": true,
     "types": ["chrome", "node", "vitest/globals", "@testing-library/jest-dom"]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "tests", "e2e"]
 }

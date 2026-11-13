@@ -17,12 +17,14 @@ export function htmlToText(html: string): string {
 }
 
 export function collapse(s: string): string {
-  return s
-    // Deliberately strips ASCII control characters from untrusted feed text.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    s
+      // Deliberately strips ASCII control characters from untrusted feed text.
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 export function truncate(s: string, max: number): string {

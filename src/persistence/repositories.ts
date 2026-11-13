@@ -187,6 +187,111 @@ export async function putCategory(db: DB, category: Category): Promise<void> {
   await db.put('categories', validate(categorySchema, 'categories', category));
 }
 
+/** Manual correction. `undefined` removes the override (back to rules). */
+export async function setCategoryOverride(
+  db: DB,
+  articleId: string,
+  categoryIds: string[] | undefined,
+): Promise<ArticleUserState> {
+  return updateUserState(db, articleId, (s) => {
+    const { categoryOverride: _drop, ...rest } = s;
+    return categoryIds === undefined ? rest : { ...rest, categoryOverride: [...new Set(categoryIds)] };
+  });
+}
+
+export function slugifyCategory(label: string): string {
+  const base = label
+    .normalize('NFKD')
+    .replace(/\p{M}+/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 40);
+  return `custom-${base || 'categorie'}`;
+}
+
+export async function addCustomCategory(
+  db: DB,
+  input: { label: string; keywords: string[]; excludeKeywords?: string[] },
+): Promise<Category> {
+  const tx = db.transaction('categories', 'readwrite');
+  const all = await tx.store.getAll();
+  const label = input.label.trim();
+  if (all.some((c) => c.label.toLowerCase() === label.toLowerCase())) {
+    tx.abort();
+    await tx.done.catch(() => undefined);
+    throw new Error(`Une catégorie « ${label} » existe déjà.`);
+  }
+  let id = slugifyCategory(label);
+  for (let i = 2; all.some((c) => c.id === id); i++) id = `${slugifyCategory(label)}-${i}`;
+  const category = validate(categorySchema, 'categories', {
+    id,
+    label,
+    keywords: input.keywords,
+    excludeKeywords: input.excludeKeywords ?? [],
+    isCustom: true,
+    hidden: false,
+    order: Math.max(0, ...all.filter((c) => c.id !== 'unclassified').map((c) => c.order)) + 1,
+  });
+  // Keep "Unclassified" last.
+  const unclassified = all.find((c) => c.id === 'unclassified');
+  if (unclassified && unclassified.order <= category.order)
+    await tx.store.put({ ...unclassified, order: category.order + 1 });
+  await tx.store.put(category);
+  await tx.done;
+  return category;
+}
+
+export async function updateCategory(db: DB, id: string, patch: (c: Category) => Category): Promise<Category> {
+  const tx = db.transaction('categories', 'readwrite');
+  const current = await tx.store.get(id);
+  if (!current) {
+    tx.abort();
+    await tx.done.catch(() => undefined);
+    throw new Error(`Unknown category ${id}`);
+  }
+  const next = validate(categorySchema, 'categories', patch(validate(categorySchema, 'categories', current)));
+  if (next.id !== id || next.isCustom !== current.isCustom) throw new Error('Category id and kind are immutable');
+  await tx.store.put(next);
+  await tx.done;
+  return next;
+}
+
+/**
+ * Deletes a custom category and removes it from every manual override and
+ * every source, in one transaction. Built-in categories can only be hidden.
+ */
+export async function deleteCustomCategory(db: DB, id: string): Promise<void> {
+  const tx = db.transaction(['categories', 'userState', 'sources', 'articles'], 'readwrite');
+  const cat = await tx.objectStore('categories').get(id);
+  if (!cat?.isCustom) {
+    tx.abort();
+    await tx.done.catch(() => undefined);
+    throw new Error('Seules les catégories personnalisées peuvent être supprimées.');
+  }
+  await tx.objectStore('categories').delete(id);
+  let cursor = await tx.objectStore('userState').openCursor();
+  while (cursor) {
+    const o = cursor.value.categoryOverride;
+    if (o?.includes(id)) await cursor.update({ ...cursor.value, categoryOverride: o.filter((x) => x !== id) });
+    cursor = await cursor.continue();
+  }
+  let sc = await tx.objectStore('sources').openCursor();
+  while (sc) {
+    if (sc.value.categoryIds.includes(id))
+      await sc.update({ ...sc.value, categoryIds: sc.value.categoryIds.filter((x) => x !== id) });
+    sc = await sc.continue();
+  }
+  let ac = await tx.objectStore('articles').openCursor();
+  while (ac) {
+    if (ac.value.autoCategories.includes(id)) {
+      await ac.update({ ...ac.value, autoCategories: ac.value.autoCategories.filter((x) => x !== id) });
+    }
+    ac = await ac.continue();
+  }
+  await tx.done;
+}
+
 // --------------------------------------------------------------- settings
 export async function getSettings(db: DB): Promise<Settings> {
   const rec = await db.get('meta', 'settings');

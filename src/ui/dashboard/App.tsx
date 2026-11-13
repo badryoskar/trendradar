@@ -1,11 +1,12 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { Article } from '../../domain/content.types';
-import { setRead, setSaved, putSettings } from '../../persistence/repositories';
+import { putSettings, setCategoryOverride, setRead, setSaved } from '../../persistence/repositories';
 import { useServices } from '../services';
 import { useDashboardData, type DashboardData } from '../useDashboardData';
 import { ArticleList } from './ArticleList';
+import { LatestPanel } from './LatestPanel';
+import { useRefresh } from './RefreshBar';
 import { SettingsPanel } from './SettingsPanel';
-import { RefreshBar, useRefresh } from './RefreshBar';
 import { SourcesPanel } from './SourcesPanel';
 import { Tabs, type TabDef } from './Tabs';
 import { TopicsPanel } from './TopicsPanel';
@@ -78,7 +79,6 @@ function Panels({
   const [actionError, setActionError] = useState<string | null>(null);
   const refresh = useRefresh(reload);
   const sourcesById = useMemo(() => new Map(data.sources.map((s) => [s.id, s])), [data.sources]);
-  const categoriesById = useMemo(() => new Map(data.categories.map((c) => [c.id, c])), [data.categories]);
 
   async function run(action: () => Promise<unknown>) {
     try {
@@ -90,16 +90,19 @@ function Panels({
     }
   }
 
-  const listProps = {
-    userStates: data.userStates,
-    sourcesById,
-    categoriesById,
+  const actions = {
     onToggleSaved: (a: Article, saved: boolean) => void run(() => setSaved(db, a.id, saved, clock)),
     onToggleRead: (a: Article, read: boolean) => void run(() => setRead(db, a.id, read, clock)),
+    onSetCategories: (a: Article, ids: string[] | undefined) => void run(() => setCategoryOverride(db, a.id, ids)),
   };
 
-  const saved = data.articles.filter((a) => data.userStates.get(a.id)?.isSaved);
-  const stale = data.sources.filter((s) => !s.isDemo && s.enabled && s.health !== 'ok' && s.health !== 'never-fetched');
+  const saved = data.articles
+    .filter((a) => data.userStates.get(a.id)?.isSaved)
+    .sort((x, y) => {
+      const sx = data.userStates.get(x.id)?.savedAt ?? '';
+      const sy = data.userStates.get(y.id)?.savedAt ?? '';
+      return sx === sy ? x.id.localeCompare(y.id) : sx < sy ? 1 : -1;
+    });
   const panel = (id: TabId, children: ReactNode) => (
     <section role="tabpanel" id={`panel-${id}`} aria-labelledby={`tab-${id}`} tabIndex={0} hidden={tab !== id}>
       {tab === id && children}
@@ -134,31 +137,7 @@ function Panels({
       )}
       {panel(
         'latest',
-        <>
-          <h2>Derniers articles découverts</h2>
-          {data.sources.some((s) => !s.isDemo) && <RefreshBar sources={data.sources} controller={refresh} />}
-          {stale.length > 0 && (
-            <div className="notice warning" role="status">
-              Données potentiellement périmées pour : {stale.map((s) => s.name).join(', ')}. Les articles déjà collectés
-              restent affichés.{' '}
-              <button type="button" onClick={() => onNavigate('sources')}>
-                Voir les sources
-              </button>
-            </div>
-          )}
-          <ArticleList
-            articles={data.articles}
-            {...listProps}
-            empty={{
-              title: data.sources.length === 0 ? 'Configuration requise' : 'Aucun article pour le moment',
-              body:
-                data.sources.length === 0
-                  ? 'Aucune source n’est configurée. Ajoutez une source, ou chargez le jeu de démonstration (données fictives) depuis Settings.'
-                  : 'Les sources configurées n’ont encore rien collecté.',
-              action: { label: 'Ouvrir Sources', onClick: () => onNavigate('sources') },
-            }}
-          />
-        </>,
+        <LatestPanel data={data} refresh={refresh} onOpenSources={() => onNavigate('sources')} {...actions} />,
       )}
       {panel('topics', <TopicsPanel />)}
       {panel(
@@ -167,13 +146,17 @@ function Panels({
           <h2>Favoris</h2>
           <ArticleList
             articles={saved}
-            {...listProps}
+            userStates={data.userStates}
+            sourcesById={sourcesById}
+            categories={data.categories}
+            {...actions}
+            summary={`${saved.length} favori(s), du plus récemment sauvegardé au plus ancien.`}
             empty={{ title: 'Aucun favori', body: 'Utilisez « Sauvegarder » sur un article pour le retrouver ici.' }}
           />
         </>,
       )}
       {panel('sources', <SourcesPanel sources={data.sources} run={run} refresh={refresh} />)}
-      {panel('settings', <SettingsPanel settings={data.settings} run={run} />)}
+      {panel('settings', <SettingsPanel settings={data.settings} categories={data.categories} run={run} />)}
     </>
   );
 }

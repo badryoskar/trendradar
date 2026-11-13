@@ -209,6 +209,94 @@ button:disabled {
   background: var(--bg);
   color: var(--text);
 }
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 10px 12px;
+  align-items: end;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.86rem;
+  min-width: 0;
+}
+.filter-search {
+  grid-column: 1 / -1;
+}
+.filter-field input,
+.filter-field select {
+  font: inherit;
+  font-size: 0.92rem;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  min-width: 0;
+  width: 100%;
+}
+.chip-note {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+}
+.why {
+  margin-top: 8px;
+  font-size: 0.86rem;
+  color: var(--text-muted);
+}
+.why summary {
+  cursor: pointer;
+}
+.why ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+.category-editor {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+.category-editor legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 4px 12px;
+  font-size: 0.92rem;
+}
+.category-rows {
+  list-style: none;
+  margin: 10px 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.category-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.category-row.editing {
+  display: block;
+}
+.settings-group h4 {
+  margin: 8px 0 4px;
+  font-size: 0.95rem;
+}
 .refresh-log {
   margin: 10px 0 0;
   padding-left: 18px;

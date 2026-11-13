@@ -1,18 +1,18 @@
 import type { Article, ArticleUserState, Category, Source } from '../../domain/content.types';
-import { ArticleCard } from '../components/ArticleCard';
+import { ArticleCard, type ArticleActions } from '../components/ArticleCard';
 import { EmptyState } from '../components/EmptyState';
 
-interface Props {
+interface Props extends ArticleActions {
   articles: Article[];
   userStates: Map<string, ArticleUserState>;
   sourcesById: Map<string, Source>;
-  categoriesById: Map<string, Category>;
-  onToggleSaved: (a: Article, saved: boolean) => void;
-  onToggleRead: (a: Article, read: boolean) => void;
+  categories: Category[];
+  /** Shown above the list; defaults to a count sentence. */
+  summary?: string;
   empty: { title: string; body: string; action?: { label: string; onClick: () => void } };
 }
 
-export function ArticleList({ articles, userStates, empty, ...rest }: Props) {
+export function ArticleList({ articles, userStates, empty, summary, ...rest }: Props) {
   if (articles.length === 0) {
     return (
       <EmptyState title={empty.title}>
@@ -28,7 +28,7 @@ export function ArticleList({ articles, userStates, empty, ...rest }: Props) {
   return (
     <>
       <p className="excerpt-label" role="status">
-        {articles.length} article(s), triés par date de découverte (plus récent d’abord).
+        {summary ?? `${articles.length} article(s), triés par date de découverte (plus récent d’abord).`}
       </p>
       <ul className="card-list">
         {articles.map((a) => (

@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png binary
+# Fixtures must stay byte-exact (encodings are part of what they test).
+tests/fixtures/** -text

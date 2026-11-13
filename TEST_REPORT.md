@@ -1,5 +1,56 @@
 # Rapport de tests
 
+## Phase 3 — 12 novembre 2026
+
+**Environnement :** identique aux phases précédentes, plus `@playwright/test` 1.64.1 avec son Chromium.
+
+### Commandes exécutées et résultats observés
+
+| Commande                                                     | Résultat                                                                                       |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| `npm run check` (typecheck, lint, tests, build, verify-dist) | OK. **16 fichiers, 163 tests réussis.** Build de 309,4 Kio, `permissions=[]`                   |
+| `E2E_NETWORK=1 npx playwright test`                          | **3 tests sur 3 réussis**, sur l'**extension chargée dans Chromium** (`--load-extension=dist`) |
+
+### Tests de bout en bout sur l'extension installée (premiers tests en conditions réelles)
+
+1. **Chargement de l'extension :** elle se charge sans permission obligatoire (`permissions`, `host_permissions` et `permissions.getAll().origins` sont vides). La popup affiche « Configuration requise ». Son bouton ouvre `chrome-extension://<id>/dashboard.html`, ce qui valide `chrome.tabs.create` sans la permission `tabs`.
+2. **Persistance après redémarrage complet du navigateur** (même profil, contexte fermé puis relancé) : favori, état lu, correction manuelle de catégorie et réglage de rétention (45 jours) sont toujours là.
+3. **Hacker News avec l'API réelle, depuis l'origine `chrome-extension://` :** une collecte stocke entre 1 et 30 articles. La seconde reconnaît les articles déjà présents (moins de nouveaux que d'articles connus). Aucune permission d'hôte n'a été demandée ni accordée.
+
+### Nouveaux tests unitaires et d'intégration
+
+- **Classification :**
+  - mots entiers, sans tenir compte des accents ni de la casse (« reaction » ne correspond pas à `react`) ;
+  - expressions de plusieurs mots ; mots-clés avec ponctuation (`node.js`) ;
+  - plusieurs catégories, triées dans l'ordre des catégories, avec les mots-clés qui les justifient ;
+  - prise en compte de l'extrait ; exclusions (`steve jobs`) ;
+  - catégories héritées de la source, sans identifiant inconnu ;
+  - une correction manuelle remplace tout le calcul ; résultat déterministe.
+- **Recherche et filtres :**
+  - « publiés aujourd'hui » se calcule sur la journée locale de Toronto (une publication à 06:00Z compte pour aujourd'hui, une à 04:30Z non) ;
+  - « découverts aujourd'hui » est indépendant de « publiés aujourd'hui » ;
+  - les articles sans date ne sont jamais inclus dans les filtres de publication, mais restent listables avec « Date inconnue » ;
+  - la fenêtre « 7 jours » couvre 7 jours locaux ;
+  - filtres par catégorie, source, favori et lecture, combinés en ET ;
+  - recherche sans accents sur le titre, la source, le domaine et la catégorie.
+- **Tri :** reproductible (égalités départagées par identifiant) ; articles sans date en dernier pour le tri par publication ; tri alphabétique selon la langue.
+- **Catégories :**
+  - création avec identifiant unique, insérée avant « Unclassified », doublon refusé ;
+  - renommage, modification des mots-clés et masquage ; identifiant non modifiable ;
+  - la suppression d'une catégorie personnalisée la retire des corrections, des sources et des articles en une seule transaction ; les catégories intégrées ne peuvent pas être supprimées ;
+  - une correction manuelle n'affecte pas l'état favori.
+- **Interface :**
+  - recherche avec compteur « N sur M » ; filtre par catégorie ;
+  - « Date inconnue » ; état vide expliqué et réinitialisation ;
+  - explication « Pourquoi ces catégories ? » ;
+  - correction manuelle, puis retour au classement automatique ;
+  - nouvelle catégorie appliquée immédiatement ; catégorie masquée absente des cartes et des filtres.
+
+### Toujours non exécuté
+
+- **Fenêtre de permission Chrome réelle** pour un flux RSS : Playwright ne peut pas cliquer dans cette fenêtre du navigateur. Le parcours est couvert par les tests d'interface avec une permission simulée. **À tester à la main** : ajouter un vrai flux, accepter, puis révoquer depuis `chrome://extensions`.
+- **Lecteur d'écran.**
+
 ## Phase 2 — 12 novembre 2026
 
 **Environnement :** identique à la phase 1, plus `@types/node` 24.19.2 (tests uniquement).

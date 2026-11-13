@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import type { Settings } from '../../domain/content.types';
+import type { Category, Settings } from '../../domain/content.types';
+import { CategoryManager } from './CategoryManager';
 import { hasDemoData, loadDemoData, removeDemoData } from '../../persistence/demo';
 import { clearReadingHistory, deleteAllData, purgeExpiredArticles, putSettings } from '../../persistence/repositories';
 import { useServices } from '../services';
 
 interface Props {
   settings: Settings;
+  categories: Category[];
   run: (action: () => Promise<unknown>) => Promise<void>;
 }
 
-export function SettingsPanel({ settings, run }: Props) {
+export function SettingsPanel({ settings, categories, run }: Props) {
   const { db, clock } = useServices();
   const [retention, setRetention] = useState(String(settings.retentionDays));
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -31,6 +33,8 @@ export function SettingsPanel({ settings, run }: Props) {
           {message}
         </div>
       )}
+
+      <CategoryManager categories={categories} run={run} />
 
       <div className="settings-group">
         <h3>Rétention</h3>

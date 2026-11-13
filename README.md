@@ -2,7 +2,7 @@
 
 Extension Chrome (Manifest V3) de veille d'actualités **local-first** : agrégation de sources autorisées (RSS/Atom, Hacker News), provenance et dates traçables, signaux de tendance uniquement lorsque les données le justifient.
 
-> **État : phase 2 (connecteurs).** Collecte manuelle depuis l'API officielle Hacker News et des flux RSS/Atom ajoutés par l'utilisateur, avec déduplication, provenance et santé des sources. Sujets et tendances : phase 4. Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
+> **État : phase 3 (expérience de veille).** Collecte manuelle depuis Hacker News (API officielle) et des flux RSS/Atom autorisés, déduplication avec provenance, classement par mots-clés explicable et corrigeable, catégories personnalisées, recherche, filtres de dates honnêtes, favoris et lu/non lu, testés aussi sur l'extension réellement installée. Sujets et tendances : phase 4. Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
 
 ## Principes
 
@@ -24,13 +24,14 @@ Puis dans Chrome : `chrome://extensions` → activer le _mode développeur_ → 
 
 ## Scripts
 
-| Commande                          | Rôle                                                                                   |
-| --------------------------------- | -------------------------------------------------------------------------------------- |
-| `npm run build`                   | Vérification TypeScript puis build de production dans `dist/`                          |
-| `npm test`                        | Tests unitaires, intégration IndexedDB (fake-indexeddb) et interface (Testing Library) |
-| `npm run lint`                    | ESLint (interdit `dangerouslySetInnerHTML`, `eval`, `Date.now()` direct)               |
-| `npm run check`                   | Typecheck + lint + tests + build + `scripts/verify-dist.mjs`                           |
-| `node scripts/generate-icons.mjs` | Régénère les icônes PNG (sans dépendance)                                              |
+| Commande                          | Rôle                                                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `npm run build`                   | Vérification TypeScript puis build de production dans `dist/`                                              |
+| `npm test`                        | Tests unitaires, intégration IndexedDB (fake-indexeddb) et interface (Testing Library)                     |
+| `npm run lint`                    | ESLint (interdit `dangerouslySetInnerHTML`, `eval`, `Date.now()` direct)                                   |
+| `npm run test:e2e`                | Build puis tests Playwright sur l'extension chargée dans Chromium (`E2E_NETWORK=1` pour l'appel réel à HN) |
+| `npm run check`                   | Typecheck + lint + tests + build + `scripts/verify-dist.mjs`                                               |
+| `node scripts/generate-icons.mjs` | Régénère les icônes PNG (sans dépendance)                                                                  |
 
 `scripts/verify-dist.mjs` contrôle le build : manifeste MV3, permissions interdites, CSP, fichiers référencés, absence de secrets, de `eval` et d'hôtes externes inattendus.
 
