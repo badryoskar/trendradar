@@ -86,4 +86,7 @@ axe-core, ESLint et Prettier. Aucune dépendance d'exécution au-delà de React,
 
 ## Licence
 
-À définir.
+[MIT](LICENSE) © 2026 badryoskar.
+
+Les contenus collectés (titres, extraits, scores) restent la propriété de leurs éditeurs ; TrendRadar n'en conserve
+que le minimum, avec attribution et lien d'origine (voir [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md)).
