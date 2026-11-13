@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { putArticle, putSource } from '../../src/persistence/repositories';
 import { freshDb, makeArticle, makeSource } from '../helpers';
+import { memoryHostPermissions } from '../../src/shared/permissions';
 import { renderApp } from './render';
 
 describe('dashboard', () => {
@@ -109,5 +110,17 @@ describe('dashboard', () => {
     await user.click(screen.getByRole('button', { name: 'Oui, tout supprimer' }));
     expect(await screen.findByText('Toutes les données locales ont été supprimées.')).toBeInTheDocument();
     expect(await db.count('articles')).toBe(0);
+  });
+
+  it('delete-all also revokes every granted site access', async () => {
+    const user = userEvent.setup();
+    const db = await freshDb();
+    const permissions = memoryHostPermissions(['https://a.example.org/*', 'https://b.example.org/*']);
+    renderApp(db, { permissions });
+    await user.click(await screen.findByRole('tab', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Supprimer toutes les données…' }));
+    await user.click(screen.getByRole('button', { name: 'Oui, tout supprimer' }));
+    expect(await screen.findByText(/et 2 accès à des sites révoqué\(s\)/)).toBeInTheDocument();
+    expect(permissions.granted.size).toBe(0);
   });
 });

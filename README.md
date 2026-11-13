@@ -1,64 +1,89 @@
 # TrendRadar
 
-Extension Chrome (Manifest V3) de veille d'actualités **local-first** : agrégation de sources autorisées (RSS/Atom, Hacker News), provenance et dates traçables, signaux de tendance uniquement lorsque les données le justifient.
+Extension Chrome (Manifest V3) de **veille d'actualités local-first**. Elle centralise des sources autorisées (API
+officielle Hacker News, flux RSS/Atom choisis par l'utilisateur). Chaque article reste relié à sa provenance et à des
+dates traçables, et un signal de tendance n'est affiché **que lorsque les données le justifient**.
 
-> **État : phase 4 (sujets et signaux).** Collecte manuelle depuis Hacker News (API officielle) et des flux RSS/Atom autorisés, déduplication avec provenance, classement par mots-clés explicable et corrigeable, catégories personnalisées, recherche, filtres de dates honnêtes, favoris et lu/non lu, testés aussi sur l'extension réellement installée. Sujets récurrents et émergents calculés par des règles déterministes et versionnées, uniquement lorsque la couverture des données le permet ([`TREND_METHOD.md`](TREND_METHOD.md)). Voir [`TEST_REPORT.md`](TEST_REPORT.md) et [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md).
+![Tableau de bord — derniers articles (données Hacker News réelles)](docs/screenshots/latest.png)
 
-## Principes
+## Le problème
 
-- **Aucun serveur.** Tout est stocké dans IndexedDB, dans l'origine de l'extension. Rien n'est transmis à un tiers.
-- **Aucune permission obligatoire.** `permissions: []`. L'accès réseau à un flux est demandé **origine par origine**, au moment où l'utilisateur ajoute la source (`optional_host_permissions`).
-- **Dates honnêtes.** La date de publication déclarée par la source (`publishedAt`) n'est jamais remplacée par la date de collecte (`firstSeenAt`). Sans date : « date de publication indisponible ».
-- **Pas de tendance inventée.** Sans historique suffisant : « signal indisponible — historique insuffisant ».
+Suivre la technologie, le développement web, WordPress/PHP, l'IA ou la cybersécurité oblige à parcourir chaque jour de
+nombreux sites. Les outils de veille courants promettent souvent du « temps réel » ou des « tendances » sans montrer
+d'où viennent les chiffres. TrendRadar fait l'inverse :
 
-## Installation (développement)
+- **chaque article** affiche sa source, son domaine, sa **date de publication déclarée** et, séparément, sa **date de découverte**. Une date absente reste « indisponible », jamais remplacée par l'heure de collecte ;
+- **chaque catégorie** est justifiée (« Pourquoi ces catégories ? ») et peut être corrigée à la main ;
+- **chaque sujet** montre ses articles, ses origines, sa période observée et la règle appliquée. Sans couverture suffisante, l'écran affiche « Signal indisponible — données insuffisantes ».
 
-Prérequis : Node.js ≥ 20 (testé avec 24.15.0), npm.
+## Fonctionnalités
+
+|                       |                                                                                                                                                                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Sources**           | API officielle Hacker News (30 éléments) ; flux RSS 2.0, RSS 1.0 et Atom ajoutés par l'utilisateur, avec une **permission Chrome demandée site par site** ; santé des sources (dernier succès, erreur, action recommandée, pause en cas de limitation) |
+| **Collecte**          | Manuelle (« Actualiser »), isolée par source ; idempotente : une collecte rejouée ne crée aucun doublon ; une source en panne n'empêche pas les autres de se mettre à jour                                                                             |
+| **Déduplication**     | Par identifiant de source, puis par URL canonique (paramètres de suivi retirés avec prudence) ; toutes les provenances sont conservées                                                                                                                 |
+| **Exploration**       | Recherche sans accents ; filtres par catégorie, source, favoris, lu/non lu, **publiés** aujourd'hui ou sur 7 jours (dates déclarées uniquement), **découverts** aujourd'hui ou sur 7 jours, date inconnue ; tri reproductible                          |
+| **Catégories**        | 11 catégories de départ ; classement déterministe par mots-clés avec exclusions ; catégories personnalisées ; correction manuelle par article                                                                                                          |
+| **Sujets et signaux** | Regroupement déterministe et versionné ; statuts **émergent**, **récurrent** ou **données insuffisantes**, selon la couverture de 3 flux, la diversité des origines et une comparaison 24 h / 6 jours ([méthode](TREND_METHOD.md))                     |
+| **Vie privée**        | Aucun serveur, aucun outil d'analyse d'audience ; `permissions: []` ; suppression totale qui révoque aussi les accès aux sites                                                                                                                         |
+
+| Sujets et méthode                      | Sources et santé                         | Popup                                |
+| -------------------------------------- | ---------------------------------------- | ------------------------------------ |
+| ![Topics](docs/screenshots/topics.png) | ![Sources](docs/screenshots/sources.png) | ![Popup](docs/screenshots/popup.png) |
+
+Les captures viennent de l'**extension réellement installée**, avec des données **réelles** de l'API Hacker News du 12 novembre 2026. Elles sont produites par `e2e/screenshots.spec.ts` et ne sont pas retouchées.
+
+## Installation
+
+Prérequis : Node.js ≥ 20 (testé avec 24.15.0) et npm.
 
 ```bash
 npm ci
-npm run build          # typecheck + build dans dist/
+npm run build
 ```
 
-Puis dans Chrome : `chrome://extensions` → activer le _mode développeur_ → **Charger l'extension non empaquetée** → sélectionner `dist/`.
+Ouvrez ensuite `chrome://extensions`, activez le **mode développeur**, cliquez **Charger l'extension non empaquetée** et
+sélectionnez `dist/`. Ouvrez la popup, puis le tableau de bord. Dans **Sources**, ajoutez Hacker News ou un flux RSS,
+puis cliquez **Actualiser**.
+
+Pour visualiser l'interface sans réseau : **Settings → Charger la démo**. Cela charge 5 articles **fictifs**, marqués « Démo », avec des liens vers `example.com`. La démo se retire à tout moment.
 
 ## Scripts
 
-| Commande                          | Rôle                                                                                                       |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `npm run build`                   | Vérification TypeScript puis build de production dans `dist/`                                              |
-| `npm test`                        | Tests unitaires, intégration IndexedDB (fake-indexeddb) et interface (Testing Library)                     |
-| `npm run lint`                    | ESLint (interdit `dangerouslySetInnerHTML`, `eval`, `Date.now()` direct)                                   |
-| `npm run test:e2e`                | Build puis tests Playwright sur l'extension chargée dans Chromium (`E2E_NETWORK=1` pour l'appel réel à HN) |
-| `npm run check`                   | Typecheck + lint + tests + build + `scripts/verify-dist.mjs`                                               |
-| `node scripts/generate-icons.mjs` | Régénère les icônes PNG (sans dépendance)                                                                  |
+| Commande                                                    | Rôle                                                                                                                                                                              |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`                                             | Vérification TypeScript, ESLint, tests Vitest, build de production, puis `scripts/verify-dist.mjs`                                                                                |
+| `npm test`                                                  | Tests unitaires, d'intégration IndexedDB et d'interface (Testing Library)                                                                                                         |
+| `npm run test:e2e`                                          | Build, puis tests Playwright sur **l'extension chargée dans Chromium** (persistance, accessibilité axe, clavier, 360 px). Ajoutez `E2E_NETWORK=1` pour l'appel réel à Hacker News |
+| `SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` | Régénère les captures du README                                                                                                                                                   |
+| `node scripts/generate-icons.mjs`                           | Régénère les icônes, sans dépendance                                                                                                                                              |
 
-`scripts/verify-dist.mjs` contrôle le build : manifeste MV3, permissions interdites, CSP, fichiers référencés, absence de secrets, de `eval` et d'hôtes externes inattendus.
+## Qualité vérifiée
 
-## Architecture (phase 1)
+Dernière exécution le 12 novembre 2026. Le détail figure dans [`TEST_REPORT.md`](TEST_REPORT.md).
 
-```text
-public/manifest.json        manifeste MV3 (copié tel quel)
-src/connectors/             client réseau borné, parseur RSS/Atom (DOMParser), API Hacker News
-src/collection/             orchestration du rafraîchissement, ajout de source
-src/domain/                 types + schémas zod, dates, URL canoniques, texte inerte, catégories, démo
-src/persistence/            IndexedDB (migrations versionnées), repositories validés
-src/shared/                 horloge injectable, garde-fous d'URL
-src/ui/                     popup + tableau de bord React (Latest, Topics, Saved, Sources, Settings)
-tests/                      Vitest
-scripts/                    génération d'icônes, vérification du build
-```
+- **210 tests Vitest** : parseurs avec documents hostiles (XXE), client réseau (erreurs 401/403/429/500, délais, taille, redirections), déduplication idempotente, dates et changements d'heure, classement, filtres, sujets, signaux sur historiques **synthétiques identifiés comme tels**, budgets de performance sur 2 000 articles.
+- **7 tests Playwright** sur l'extension installée : aucune permission obligatoire, persistance après redémarrage du navigateur, collecte réelle Hacker News idempotente, **0 violation axe WCAG 2.2 A/AA** en thème clair et sombre, navigation au clavier, aucun défilement horizontal à 360 px.
+- **Contrôle du build** : CSP stricte, aucune permission interdite, aucun secret, aucun `eval`, aucun hôte inattendu. `npm audit` : **0 vulnérabilité**.
 
-Choix notables (justifiés dans l'audit de phase 0) :
+## Documentation
 
-- **Pas de service worker dans le MVP** : le rafraîchissement est manuel et déclenché depuis le tableau de bord, qui dispose de `DOMParser`. Évite offscreen document et limites de vie du worker.
-- **IndexedDB comme stockage unique** : pas de `chrome.storage`, donc pas de permission `storage`.
-- **Validation à l'exécution** (zod) à chaque écriture et lecture ; les enregistrements corrompus sont ignorés et signalés.
+| Document                                       | Contenu                                                                                              |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| [`ARCHITECTURE.md`](ARCHITECTURE.md)           | Pipeline, modules, décisions et alternatives écartées, sécurité réseau, limites de MV3, performances |
+| [`DATA_DICTIONARY.md`](DATA_DICTIONARY.md)     | Magasins IndexedDB, dates et provenance, déduplication, migrations, suppression                      |
+| [`TREND_METHOD.md`](TREND_METHOD.md)           | Règles versionnées de regroupement et de signal, seuils, couverture, biais                           |
+| [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md)     | Statut, conditions et garde-fous de chaque source                                                    |
+| [`PRIVACY.md`](PRIVACY.md)                     | Ce qui est stocké, transmis et **non transmis**                                                      |
+| [`KNOWN_LIMITATIONS.md`](KNOWN_LIMITATIONS.md) | Ce que TrendRadar ne fait pas, ou fait imparfaitement                                                |
+| [`TEST_REPORT.md`](TEST_REPORT.md)             | Commandes exécutées et résultats observés, phase par phase                                           |
 
-## Jeu de démonstration
+## Stack
 
-Bouton **Settings → Charger la démo** : 5 articles **fictifs**, badge « Démo », titres préfixés `[Démo]`, liens vers `example.com` (domaine réservé). Il illustre un article sans date et un article ancien découvert récemment. Retirable à tout moment.
+TypeScript (strict), React 18, Vite 7, zod, idb (IndexedDB), Vitest, Testing Library, fake-indexeddb, Playwright,
+axe-core, ESLint et Prettier. Aucune dépendance d'exécution au-delà de React, zod et idb.
 
 ## Licence
 
-À décider.
+À définir.

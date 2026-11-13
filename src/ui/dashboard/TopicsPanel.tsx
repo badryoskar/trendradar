@@ -99,9 +99,10 @@ export function TopicsPanel({ data }: { data: DashboardData }) {
           </summary>
           <ul>
             <li>
-              Regroupement : titres normalisés, mots vides FR/EN retirés ; similarité de Jaccard ≥ {MIN_JACCARD} avec le
-              premier article du sujet et au moins {MIN_SHARED_SPECIFIC} termes spécifiques communs ; écart maximal de{' '}
-              {MAX_GAP_HOURS} h avec le dernier article du sujet. Le titre affiché est celui d’un article réel.
+              Regroupement : titres normalisés, mots vides FR/EN retirés ; similarité de Jaccard ≥{' '}
+              {String(MIN_JACCARD).replace('.', ',')} avec le premier article du sujet et au moins {MIN_SHARED_SPECIFIC}{' '}
+              termes spécifiques communs ; écart maximal de {MAX_GAP_HOURS} h avec le dernier article du sujet. Le titre
+              affiché est celui d’un article réel.
             </li>
             <li>
               Émergent : deux fenêtres couvertes, au moins {MIN_RECENT_ARTICLES} articles datés et {MIN_RECENT_ORIGINS}{' '}

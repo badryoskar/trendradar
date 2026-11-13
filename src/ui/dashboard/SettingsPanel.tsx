@@ -3,6 +3,8 @@ import type { Category, Settings } from '../../domain/content.types';
 import { CategoryManager } from './CategoryManager';
 import { hasDemoData, loadDemoData, removeDemoData } from '../../persistence/demo';
 import { clearReadingHistory, deleteAllData, purgeExpiredArticles, putSettings } from '../../persistence/repositories';
+import { storageStatus, type StorageStatus } from '../../persistence/db';
+import { revokeAllHostPermissions } from '../../shared/permissions';
 import { useServices } from '../services';
 
 interface Props {
@@ -12,15 +14,20 @@ interface Props {
 }
 
 export function SettingsPanel({ settings, categories, run }: Props) {
-  const { db, clock } = useServices();
+  const { db, clock, permissions } = useServices();
   const [retention, setRetention] = useState(String(settings.retentionDays));
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [demoLoaded, setDemoLoaded] = useState<boolean | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  const [storage, setStorage] = useState<StorageStatus | null>(null);
+
   useEffect(() => {
     void hasDemoData(db).then(setDemoLoaded);
+    void storageStatus().then(setStorage);
   }, [db, settings]);
+
+  const mb = (n: number | null) => (n === null ? 'inconnu' : `${(n / 1024 / 1024).toFixed(1)} Mo`);
 
   const retentionValue = Number(retention);
   const retentionValid = Number.isInteger(retentionValue) && retentionValue >= 1 && retentionValue <= 3650;
@@ -127,6 +134,21 @@ export function SettingsPanel({ settings, categories, run }: Props) {
       </div>
 
       <div className="settings-group">
+        <h3>Stockage local</h3>
+        <p className="excerpt-label" role="status">
+          Utilisé : {mb(storage?.usageBytes ?? null)} — quota disponible pour l’extension :{' '}
+          {mb(storage?.quotaBytes ?? null)}. Protection contre l’effacement automatique :{' '}
+          {storage?.persisted === true
+            ? 'accordée'
+            : storage?.persisted === false
+              ? 'non accordée par le navigateur'
+              : 'inconnue'}
+          . Les données ne sont pas chiffrées par TrendRadar : elles sont protégées comme le reste de votre profil
+          Chrome.
+        </p>
+      </div>
+
+      <div className="settings-group">
         <h3>Supprimer toutes les données</h3>
         <p className="excerpt-label">
           Sources, articles, favoris, historique et préférences locales. Action irréversible.
@@ -145,8 +167,11 @@ export function SettingsPanel({ settings, categories, run }: Props) {
                 onClick={() =>
                   void run(async () => {
                     await deleteAllData(db);
+                    const revoked = await revokeAllHostPermissions(permissions);
                     setConfirmDelete(false);
-                    setMessage('Toutes les données locales ont été supprimées.');
+                    setMessage(
+                      `Toutes les données locales ont été supprimées${revoked ? ` et ${revoked} accès à des sites révoqué(s)` : ''}.`,
+                    );
                   })
                 }
               >

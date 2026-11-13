@@ -19,8 +19,22 @@ export class ConnectorError extends Error {
   }
 }
 
+export const QUOTA_MESSAGE =
+  'Espace de stockage local plein : réduisez la durée de rétention ou purgez les articles (Settings), puis réessayez.';
+
+/** IndexedDB quota errors surface directly or as the error of an aborted transaction. */
+export function isQuotaError(err: unknown): boolean {
+  const e = err as { name?: string; error?: { name?: string }; target?: { error?: { name?: string } } } | null;
+  return (
+    e?.name === 'QuotaExceededError' ||
+    e?.error?.name === 'QuotaExceededError' ||
+    e?.target?.error?.name === 'QuotaExceededError'
+  );
+}
+
 export function toConnectorError(err: unknown): ConnectorError {
   if (err instanceof ConnectorError) return err;
+  if (isQuotaError(err)) return new ConnectorError('other', QUOTA_MESSAGE);
   if (err instanceof DOMException && err.name === 'AbortError')
     return new ConnectorError('aborted', 'Collecte annulée.');
   return new ConnectorError('other', err instanceof Error ? err.message.slice(0, 300) : 'Erreur inconnue.');

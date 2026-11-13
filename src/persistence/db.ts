@@ -139,6 +139,18 @@ export async function requestPersistentStorage(): Promise<'granted' | 'denied' |
   }
 }
 
-export function isQuotaError(err: unknown): boolean {
-  return err instanceof DOMException && (err.name === 'QuotaExceededError' || err.code === 22);
+export interface StorageStatus {
+  usageBytes: number | null;
+  quotaBytes: number | null;
+  persisted: boolean | null;
+}
+
+/** Origin-wide storage estimate (IndexedDB included), for the Settings panel. */
+export async function storageStatus(): Promise<StorageStatus> {
+  const s = typeof navigator === 'undefined' ? undefined : navigator.storage;
+  const [estimate, persisted] = await Promise.all([
+    s?.estimate ? s.estimate().catch(() => null) : null,
+    s?.persisted ? s.persisted().catch(() => null) : null,
+  ]);
+  return { usageBytes: estimate?.usage ?? null, quotaBytes: estimate?.quota ?? null, persisted };
 }

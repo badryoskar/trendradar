@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import type { Article } from '../../domain/content.types';
 import { putSettings, setCategoryOverride, setRead, setSaved } from '../../persistence/repositories';
+import { isQuotaError, QUOTA_MESSAGE } from '../../shared/failures';
 import { useServices } from '../services';
 import { useDashboardData, type DashboardData } from '../useDashboardData';
 import { ArticleList } from './ArticleList';
@@ -86,7 +87,7 @@ function Panels({
       await action();
       await reload();
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : String(err));
+      setActionError(isQuotaError(err) ? QUOTA_MESSAGE : err instanceof Error ? err.message : String(err));
     }
   }
 

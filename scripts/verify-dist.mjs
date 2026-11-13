@@ -35,7 +35,22 @@ for (const h of manifest.host_permissions ?? []) {
 for (const h of manifest.optional_host_permissions ?? [])
   if (h.startsWith('http://')) fail(`http optional host permission: ${h}`);
 const csp = manifest.content_security_policy?.extension_pages ?? '';
-if (!/script-src 'self'/.test(csp) || /unsafe-eval|unsafe-inline|https?:/.test(csp)) fail(`weak CSP: ${csp}`);
+const directives = Object.fromEntries(
+  csp
+    .split(';')
+    .map((d) => d.trim().split(/\s+/))
+    .filter((d) => d[0])
+    .map(([name, ...values]) => [name, values]),
+);
+const scriptSrc = directives['script-src'] ?? [];
+if (scriptSrc.join(' ') !== "'self'") fail(`script-src must be exactly 'self': ${csp}`);
+if (/unsafe-eval|unsafe-inline|wasm-unsafe-eval/.test(csp)) fail(`unsafe CSP keyword: ${csp}`);
+if ((directives['object-src'] ?? []).join(' ') !== "'none'") fail(`object-src must be 'none': ${csp}`);
+for (const [name, values] of Object.entries(directives)) {
+  if (name !== 'connect-src' && values.some((v) => /^https?:/.test(v)))
+    fail(`remote origin allowed in ${name}: ${csp}`);
+}
+if ((directives['connect-src'] ?? []).some((v) => v.startsWith('http:'))) fail(`http allowed in connect-src: ${csp}`);
 
 // 2. Referenced files exist
 const referenced = [

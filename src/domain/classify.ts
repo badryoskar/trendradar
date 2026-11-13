@@ -35,20 +35,29 @@ export interface Classification {
   origin: 'override' | 'rules';
 }
 
+type Compiled = Array<{ id: string; keywords: Array<[string, string]>; exclude: Array<[string, string]> }>;
+/** Normalised keywords per category list (lists are replaced, never mutated, on edit). */
+const compiledCache = new WeakMap<Category[], Compiled>();
+
+function compile(categories: Category[]): Compiled {
+  let c = compiledCache.get(categories);
+  if (!c) {
+    const norm = (ks: string[]) =>
+      ks.map((k) => [k, normalizeForMatch(k)] as [string, string]).filter(([, n]) => n.trim() !== '');
+    c = categories.map((cat) => ({ id: cat.id, keywords: norm(cat.keywords), exclude: norm(cat.excludeKeywords) }));
+    compiledCache.set(categories, c);
+  }
+  return c;
+}
+
 export function classifyText(text: string, categories: Category[]): Pick<Classification, 'matches' | 'excludedBy'> {
   const hay = normalizeForMatch(text);
   const matches: Record<string, string[]> = {};
   const excludedBy: Record<string, string[]> = {};
-  for (const c of categories) {
-    const hits = c.keywords.filter((k) => {
-      const n = normalizeForMatch(k);
-      return n.trim() !== '' && hay.includes(n);
-    });
+  for (const c of compile(categories)) {
+    const hits = c.keywords.filter(([, n]) => hay.includes(n)).map(([k]) => k);
     if (hits.length === 0) continue;
-    const excl = c.excludeKeywords.filter((k) => {
-      const n = normalizeForMatch(k);
-      return n.trim() !== '' && hay.includes(n);
-    });
+    const excl = c.exclude.filter(([, n]) => hay.includes(n)).map(([k]) => k);
     if (excl.length > 0) excludedBy[c.id] = excl;
     else matches[c.id] = hits;
   }

@@ -1,5 +1,50 @@
 # Rapport de tests
 
+## Phase 5 — 12 novembre 2026 (livraison)
+
+**Environnement :** Windows 11 Pro, Node.js v24.15.0, npm 11.12.1, TypeScript 5.9.3, Vite 7.3.8, Vitest 4.1.12, Playwright 1.64.1 (Chromium), @axe-core/playwright 4.14.0.
+
+### Commandes exécutées et résultats observés
+
+| Commande                                                    | Résultat                                                                                                                                                                              |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`                                             | OK. **21 fichiers, 210 tests réussis.** Build de 324,4 Kio, `permissions=[]`                                                                                                          |
+| `E2E_NETWORK=1 npx playwright test`                         | **7 réussis, 1 ignoré** (le script de captures, exécuté séparément)                                                                                                                   |
+| `SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` | Réussi : 6 captures dans `docs/screenshots/` (extension installée, données HN réelles)                                                                                                |
+| `npm audit`                                                 | **0 vulnérabilité**, dépendances de développement comprises. L'alerte `minimatch` de `typescript-eslint` est corrigée par un `override` vers 11.0.8, et le lint a été vérifié ensuite |
+| `npm audit --omit=dev`                                      | 0 vulnérabilité                                                                                                                                                                       |
+
+### Audit de sécurité : constats et corrections
+
+- **Corrigé :** « Supprimer toutes les données » ne révoquait pas les permissions d'accès aux sites déjà accordées. La suppression révoque maintenant **toutes** les origines optionnelles (test d'interface ajouté).
+- **Durci :** la CSP passe de `script-src 'self'; object-src 'self'` à `default-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; img-src 'self'; connect-src https:`. `verify-dist` vérifie désormais chaque directive. L'extension se charge correctement avec cette CSP (vérifié par les tests E2E).
+- **Ajouté :**
+  - les erreurs de quota IndexedDB, directes ou portées par une transaction annulée, deviennent un message utilisateur, aussi bien pour les actions que pour les collectes ;
+  - Settings affiche l'espace de stockage utilisé, le quota et l'état de protection contre l'effacement.
+- **Revu, sans changement nécessaire :**
+  - aucun HTML injecté (règle ESLint) ; liens limités à `http(s):` avec `noopener noreferrer` ;
+  - texte des flux rendu inerte ; entités XML rejetées ;
+  - requêtes sans cookies ni referrer ; journaux sans contenu.
+
+### Accessibilité (extension installée)
+
+- **axe-core, règles WCAG 2.0/2.1/2.2 A et AA :** **0 violation**, en thème **clair** et **sombre**, sur la popup et les 5 onglets. Les données de démo sont chargées, et l'éditeur de catégories ainsi que tous les panneaux dépliables sont ouverts pendant l'analyse.
+- **Clavier :** le lien d'évitement reçoit le focus en premier, puis les onglets. Les flèches changent d'onglet et déplacent le focus, et le focus reste visible.
+- **Largeur de 360 px :** aucun défilement horizontal sur les 5 onglets.
+- **Non exécuté :** test avec un lecteur d'écran réel (NVDA, VoiceOver).
+
+### Performances (2 000 articles synthétiques)
+
+- **Recherche, filtres, classement et tri : 611 ms → 115 ms.** Les mots-clés normalisés sont désormais mis en cache par liste de catégories.
+- **Regroupement en sujets et signaux :** 0,7 à 1,7 s. **Ingestion de 500 articles :** 0,3 à 0,5 s, et la rejouer n'insère rien.
+- **Budgets vérifiés à chaque exécution** (`tests/perf/budget.test.ts`) : 0,5 s, 3 s et 3 s.
+
+### Toujours non exécuté (voir `KNOWN_LIMITATIONS.md`)
+
+- La vraie fenêtre de permission Chrome pour un flux RSS réel : Playwright ne peut pas la piloter.
+- Un lecteur d'écran réel.
+- Un statut « émergent » sur données réelles : il faut au moins 3 flux RSS actualisés pendant une semaine.
+
 ## Phase 4 — 12 novembre 2026
 
 ### Commandes exécutées et résultats observés

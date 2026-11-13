@@ -1,37 +1,8 @@
-import { chromium, expect, test, type BrowserContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const DIST = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
-
-async function launch(userDataDir: string): Promise<BrowserContext> {
-  return chromium.launchPersistentContext(userDataDir, {
-    channel: 'chromium',
-    headless: true,
-    args: [`--disable-extensions-except=${DIST}`, `--load-extension=${DIST}`],
-  });
-}
-
-/** The extension has no service worker, so read its id from chrome://extensions. */
-async function extensionId(context: BrowserContext): Promise<string> {
-  const page = await context.newPage();
-  await page.goto('chrome://extensions');
-  const id = await page.evaluate(async () => {
-    // developerPrivate is exposed to the chrome://extensions WebUI.
-    const api = (
-      globalThis as unknown as {
-        chrome: { developerPrivate: { getExtensionsInfo(): Promise<Array<{ id: string; name: string }>> } };
-      }
-    ).chrome.developerPrivate;
-    const list = await api.getExtensionsInfo();
-    return list.find((e) => e.name === 'TrendRadar')?.id ?? null;
-  });
-  await page.close();
-  if (!id) throw new Error('TrendRadar extension not loaded');
-  return id;
-}
+import { join } from 'node:path';
+import { extensionId, launch } from './helpers';
 
 test.describe('installed extension', () => {
   let userDataDir: string;
